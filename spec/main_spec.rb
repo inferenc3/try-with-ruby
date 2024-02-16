@@ -9,7 +9,9 @@ RSpec.describe Main do
     it "has an instance method" do
       expect(described_class.new.hello).to eq 'hello'
     end
+  end
 
+  context "Helpers" do
     it "has a static helper" do
       expect(described_class::Helpers.say_hello).to eq 'hello'
     end
