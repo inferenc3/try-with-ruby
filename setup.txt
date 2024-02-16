@@ -3,3 +3,8 @@ rspec - combined specification and testing
 guard - automatic test runs on change
 bundle - self-contained dependencies
 
+https://devdocs.io/
+
+RSpec matchers:
+ - https://rspec.info/features/3-12/rspec-expectations/built-in-matchers/
+ - https://gist.github.com/JunichiIto/f603d3fbfcf99b914f86
