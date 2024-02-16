@@ -1,0 +1,5 @@
+git - checkpoint what works, rollback what fails.
+rspec - combined specification and testing
+guard - automatic test runs on change
+bundle - self-contained dependencies
+
