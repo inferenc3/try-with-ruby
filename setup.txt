@@ -3,6 +3,10 @@ rspec - combined specification and testing
 guard - automatic test runs on change
 bundle - self-contained dependencies
 
+TODO
+ - `f` for focus shortcut
+ - test interactive debugging and/or binding.pry
+
 https://devdocs.io/
 
 RSpec matchers:
