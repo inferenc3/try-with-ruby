@@ -1,3 +1,5 @@
+# Check Ruby LSP is running.
+
 class Main
   def hello
     H.say_hello
