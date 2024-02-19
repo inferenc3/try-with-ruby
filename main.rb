@@ -53,11 +53,11 @@ BattleShip = Data.define(:x, :y, :length, :orientation) do
     @points = {}
 
     if orientation == 'horizontal'
-      for x in (x..(x + length))
+      for x in (x...(x + length))
         @points[[x, y]] = false
       end
     else
-      for y in (y..(y + length))
+      for y in (y...(y + length))
         @points[[x, y]] = false
       end
     end
@@ -79,20 +79,44 @@ BattleShip = Data.define(:x, :y, :length, :orientation) do
   end
 
   def to_points
-    @points.keys.clone
+    @points.keys
   end
 end
 
-class Main
-  def hello
-    H.say_hello
+class Board
+  attr_accessor :width, :length
+
+  def initialize(width:, length:)
+    @width = width
+    @length = length
+
+    @points_to_ships = {}
+  end
+
+  def add_ships(ships)
+    for ship in ships
+      for point in ship.to_points
+        if @points_to_ships[point].nil?
+          @points_to_ships[point] = ship
+        else
+          raise "Overlapping ships"
+        end
+      end
+    end
+
+    nil
+  end
+
+  def fire(x:, y:)
+    @points_to_ships[[x, y]]&.fire(x: x, y: y) || false
+  end
+
+  def all_battleships_sunk?
+    @points_to_ships.values.all? { |ship| ship.sunk? }
   end
 
   class Helpers
     class << self
-      def say_hello
-        "hello"
-      end
     end
   end
 
