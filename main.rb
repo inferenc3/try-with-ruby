@@ -1,6 +1,6 @@
 class Main
   def hello
-    Helpers.say_hello
+    H.say_hello
   end
 
   class Helpers
@@ -10,4 +10,6 @@ class Main
       end
     end
   end
+
+  H = Helpers
 end
