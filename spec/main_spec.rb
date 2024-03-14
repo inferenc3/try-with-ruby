@@ -2,44 +2,41 @@ require "./spec_helper.rb"
 require "./main.rb"
 
 RSpec.describe RowCreator do
-  let(:num_rows) { 3 }
+  let(:num_rows) { 15 }
 
   let(:station_names_and_values) do
     [
-      ["station1", "1"],
-      ["station2", "2"],
-      ["station3", "3"],
-    ]
+      ["station1", [-10, 20, 5]],
+      ["station2", [0, 10, 5]],
+      ["station3", [5, 15, 10]],
+  ].to_h
   end
 
   let(:instance) { described_class.new(num_rows, station_names_and_values) }
 
   it "generates rows" do
-    limit = 15
-    counter = 0
-
     instance.generate do |row|
-      parsed_row = row.split(";")
+      name, value = row.split(";")
 
-      expect(parsed_row).to eq station_names_and_values[counter % 3]
+      expect(station_names_and_values.keys).to include(name)
 
-      counter = counter + 1
-      break if counter == limit
+      min, max, mean = station_names_and_values[name]
+      expect(value.to_i).to be_between(min, max), "#{row} is not between #{min} and #{max}"
     end
   end
 
-  it "generates a finite sequence" do
-    limit = 15
-    counter = 0
+  it "appends measurements to file" do
+    path = "test_file_measurements.txt"
 
-    instance.generate_finite_sequence(9) do |row|
-      parsed_row = row.split(";")
+    File.delete(path) if File.exist?(path)
 
-      counter = counter + 1
-      break if counter == limit
+    instance.write_measurements_to_file(path)
+
+    expect(File.read(path).split("\n").length).to eq(num_rows)
+
+    for station_name, spec_values in instance.unpack_measurements_file(path)
+      expect(spec_values).to eq(station_names_and_values[station_name])
     end
-
-    expect(counter).to eq 9
   end
 end
 
@@ -87,18 +84,16 @@ RSpec.describe Helpers do
 
     let(:hash) do
       {
-        "station1" => [1, 2, 3],
-        "station2" => [4, 5, 6],
-        "station3" => [7, 8, 9],
+        "station1" => [1, 12, 3],
+        "station2" => [4, 13, 6],
+        "station3" => [7, 15, 9],
       }
     end
 
     it "drains sequences at random" do
       hash_copy = deep_clone_hash_of_arrays(hash)
 
-      9.times do
-        key, value = described_class.drain_sequences_at_random(hash_copy)
-
+      described_class.drain_sequences_at_random(hash_copy) do |key, value|
         expect(hash_copy[key]).not_to include(value) if hash_copy[key]
         expect(hash[key]).to include(value)
       end

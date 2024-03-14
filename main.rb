@@ -7,24 +7,34 @@ class RowCreator
   end
 
   def generate
-    @station_names_and_min_max_means.cycle.map do |station_name, value|
+    station_names_and_value_sequences = Helpers.generate_value_sequences(@num_rows, @station_names_and_min_max_means)
+
+    Helpers.drain_sequences_at_random(station_names_and_value_sequences) do |station_name, value|
       yield "#{station_name};#{value}"
     end
   end
 
-  def generate_finite_sequence(limit)
-    counter = 0
-
-    generate do |row|
-      yield row
-      counter = counter + 1
-      break if counter == limit
+  def write_measurements_to_file(path)
+    File.open(path, "w") do |file|
+      generate do |row|
+        file.puts row 
+      end
     end
   end
 
-  def dump(path)
-    File.open(path, "a") do |file|
-      file.puts "This is the line I want to append."
+  def unpack_measurements_file(path)
+    rows = File.read(path).split("\n").map! { |r| r.split(";") }
+
+    reconstructed_spec = {}
+
+    for row in rows
+      station_name, value = row
+      reconstructed_spec[station_name] ||= []
+      reconstructed_spec[station_name] << value.to_f
+    end
+
+    for station, values in reconstructed_spec
+      reconstructed_spec[station] = [values.min, values.max, values.sum.to_f / values.length] 
     end
   end
 end
@@ -61,11 +71,21 @@ class Helpers
       # remove the first element from the array
       # if the array is empty, remove the key from the hash
       # return the key and the removed element
-      key = hash.keys.sample
-      value = hash[key].shift
-      hash.delete(key) if hash[key].empty?
-      [key, value]
+      while hash.any?
+        key = hash.keys.sample
+        value = hash[key].shift
+        hash.delete(key) if hash[key].empty?
+        yield [key, value]
+      end
     end 
+
+    def generate_value_sequences(num_rows, station_names_and_min_max_means)
+      num_measurements_per_station = (num_rows / station_names_and_min_max_means.size).round
+
+      station_names_and_value_sequences = station_names_and_min_max_means.transform_values do |min, max, mean|
+        values_with_min_max_mean(min, max, mean, num_measurements_per_station)
+      end   
+    end
   end
 end
 
