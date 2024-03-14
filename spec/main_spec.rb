@@ -60,7 +60,7 @@ RSpec.describe Helpers do
     end
   end
 
-  fcontext "#values_with_min_max_mean" do
+  context "#values_with_min_max_mean" do
     let(:values) do
       described_class.values_with_min_max_mean(1, 3, 2, 5)
     end
@@ -75,6 +75,35 @@ RSpec.describe Helpers do
 
     it 'produces values with correct mean' do
       expect(values.sum.to_f / values.length).to eq(2)
+    end
+  end
+
+  context "#drain_sequences_at_random" do
+    def deep_clone_hash_of_arrays(hash)
+      hash.each_with_object({}) do |(key, value), cloned_hash|
+        cloned_hash[key] = value.map(&:dup)
+      end
+    end
+
+    let(:hash) do
+      {
+        "station1" => [1, 2, 3],
+        "station2" => [4, 5, 6],
+        "station3" => [7, 8, 9],
+      }
+    end
+
+    it "drains sequences at random" do
+      hash_copy = deep_clone_hash_of_arrays(hash)
+
+      9.times do
+        key, value = described_class.drain_sequences_at_random(hash_copy)
+
+        expect(hash_copy[key]).not_to include(value) if hash_copy[key]
+        expect(hash[key]).to include(value)
+      end
+
+      expect(hash_copy).to eq({})
     end
   end
 end

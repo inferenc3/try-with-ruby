@@ -55,6 +55,17 @@ class Helpers
 
       series
     end
+
+    def drain_sequences_at_random(hash)
+      # choose a random key from the hash
+      # remove the first element from the array
+      # if the array is empty, remove the key from the hash
+      # return the key and the removed element
+      key = hash.keys.sample
+      value = hash[key].shift
+      hash.delete(key) if hash[key].empty?
+      [key, value]
+    end 
   end
 end
 
