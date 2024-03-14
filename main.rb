@@ -14,12 +14,25 @@ class RowCreator
     end
   end
 
-  def write_measurements_to_file(path)
+  def write_measurements_to_file(path:, progress_indicator: false)
+    counter = 0
+
     File.open(path, "w") do |file|
       generate do |row|
-        file.puts row 
+        file.puts row
+        
+        if counter % (@num_rows / 100) == 0 && progress_indicator
+          percent = ((counter.to_f / @num_rows) * 100).round
+          print "\r#{percent}%".ljust(7)
+          print '[' + ("█" * percent.to_i).ljust(100, '░') + ']'
+        end
+
+        counter = counter + 1
       end
     end
+
+    print "\r100%".ljust(7) if progress_indicator
+    print '[' + ("█" * 100) + ']'
   end
 
   def unpack_measurements_file(path)
@@ -55,6 +68,10 @@ class Helpers
         raise ArgumentError, "Mean is outside the range [min, max]"
       end
 
+      if num_values < 3
+        raise ArgumentError, "Not enough rows"
+      end
+
       # Calculate the step required to distribute values to achieve the mean
       total_range = max - min
       adjustment = mean - min - (total_range.to_f / 2)
@@ -63,7 +80,7 @@ class Helpers
       # Generate the series of values
       series = Array.new(num_values) { |i| min + i * step + adjustment }
 
-      series
+      series.map { |n| n.round(1) }
     end
 
     def drain_sequences_at_random(hash)
@@ -85,6 +102,29 @@ class Helpers
       station_names_and_value_sequences = station_names_and_min_max_means.transform_values do |min, max, mean|
         values_with_min_max_mean(min, max, mean, num_measurements_per_station)
       end   
+    end
+
+    def generate_spec_file_from_station_names(input_path, output_path)
+      number_range = -100.0..100.0
+
+      output_file = File.open(output_path, "w")
+      File.readlines(input_path).each do |station_name|
+        min, max = [rand(number_range).round(1), rand(number_range).round(1)].sort
+        mean = rand(min..max).round(1)
+
+        output_file.puts "#{station_name.strip};#{min.to_f};#{max.to_f};#{mean.to_f}"
+      end
+    end
+
+    def unpack_spec_file(path)
+      spec = {}
+
+      File.readlines(path).map do |line|
+        station_name, min, max, mean = line.split(";")
+        spec[station_name] = [min.to_f, max.to_f, mean.to_f]
+      end
+
+      spec
     end
   end
 end

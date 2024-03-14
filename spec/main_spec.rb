@@ -21,7 +21,7 @@ RSpec.describe RowCreator do
       expect(station_names_and_values.keys).to include(name)
 
       min, max, mean = station_names_and_values[name]
-      expect(value.to_i).to be_between(min, max), "#{row} is not between #{min} and #{max}"
+      expect(value.to_f).to be_between(min, max), "#{row} is not between #{min} and #{max}"
     end
   end
 
@@ -30,7 +30,7 @@ RSpec.describe RowCreator do
 
     File.delete(path) if File.exist?(path)
 
-    instance.write_measurements_to_file(path)
+    instance.write_measurements_to_file(path: path)
 
     expect(File.read(path).split("\n").length).to eq(num_rows)
 
@@ -99,6 +99,14 @@ RSpec.describe Helpers do
       end
 
       expect(hash_copy).to eq({})
+    end
+
+    context "#generate_spec_file_from_station_names" do
+      it "generates spec file" do
+        described_class.generate_spec_file_from_station_names('./cities.txt', './spec.txt')
+
+        expect(described_class.unpack_spec_file('./spec.txt').keys.to_set).to eq(File.readlines('./cities.txt').map(&:strip).to_set)
+      end
     end
   end
 end
