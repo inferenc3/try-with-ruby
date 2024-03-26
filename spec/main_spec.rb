@@ -2,7 +2,7 @@ require "./spec_helper.rb"
 require "./main.rb"
 
 RSpec.describe RowCreator do
-  let(:num_rows) { 15 }
+  let(:num_rows) { 1000 }
 
   let(:station_names_and_values) do
     [
@@ -25,7 +25,7 @@ RSpec.describe RowCreator do
     end
   end
 
-  it "appends measurements to file" do
+  fit "appends measurements to file" do
     path = "test_file_measurements.txt"
 
     File.delete(path) if File.exist?(path)

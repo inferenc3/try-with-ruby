@@ -1,13 +1,23 @@
 # Check Ruby LSP is running.
 
 class RowCreator
+  MEASUREMENTS_PER_CITY = 10
+  MINIMUM_ROWS = 1000
+
   def initialize(num_rows, station_names_and_min_max_means)
     @num_rows = num_rows
     @station_names_and_min_max_means = station_names_and_min_max_means
   end
 
+  # minimum rows 1000
+  # measurements per city: 10
+  # choose a random city until num_rows / 10
+  # generate a random value
+  # append to file with city and value
   def generate
-    station_names_and_value_sequences = Helpers.generate_value_sequences(@num_rows, @station_names_and_min_max_means)
+    station_names_and_value_sequences = @station_names_and_min_max_means.transform_values do |min, max, mean|
+      Helpers.values_with_min_max_mean(min, max, mean, num_measurements_per_station)
+    end
 
     Helpers.drain_sequences_at_random(station_names_and_value_sequences) do |station_name, value|
       yield "#{station_name};#{value}"
@@ -15,12 +25,14 @@ class RowCreator
   end
 
   def write_measurements_to_file(path:, progress_indicator: false)
+    raise "At least 1000 rows required" if @num_rows < 1000
+
     counter = 0
 
     File.open(path, "w") do |file|
       generate do |row|
         file.puts row
-        
+
         if counter % (@num_rows / 100) == 0 && progress_indicator
           percent = ((counter.to_f / @num_rows) * 100).round
           print "\r#{percent}%".ljust(7)
@@ -95,14 +107,6 @@ class Helpers
         yield [key, value]
       end
     end 
-
-    def generate_value_sequences(num_rows, station_names_and_min_max_means)
-      num_measurements_per_station = (num_rows / station_names_and_min_max_means.size).round
-
-      station_names_and_value_sequences = station_names_and_min_max_means.transform_values do |min, max, mean|
-        values_with_min_max_mean(min, max, mean, num_measurements_per_station)
-      end   
-    end
 
     def generate_spec_file_from_station_names(input_path, output_path)
       number_range = -100.0..100.0
